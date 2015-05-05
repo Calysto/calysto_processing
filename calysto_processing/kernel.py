@@ -1,6 +1,5 @@
 from metakernel import MetaKernel
 from IPython.display import HTML, Javascript
-import sys
 import re
 
 class ProcessingKernel(MetaKernel):
@@ -131,8 +130,10 @@ class ProcessingKernel(MetaKernel):
         if code.strip() == "":
             return
         self.canvas_id += 1
-
-        env = {"code": repr(code)[1:] if sys.version.startswith('2') else repr(code),
+        repr_code = repr(code)
+        if repr_code.startswith('u'):
+            repr_code = repr_code[1:]
+        env = {"code": repr_code,
                "id": self.canvas_id}
         code = """
 <div id="canvas_div_%(id)s">
