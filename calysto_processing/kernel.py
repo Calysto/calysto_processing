@@ -1,12 +1,16 @@
 from metakernel import MetaKernel
 from IPython.display import HTML, Javascript
+
 import re
+import os
+import subprocess
+import tempfile
 
 class ProcessingKernel(MetaKernel):
     implementation = 'Processing'
-    implementation_version = '1.0'
+    implementation_version = '2.0'
     language = 'java'
-    language_version = '0.1'
+    language_version = '2.2.1'
     language_info = {
         'mimetype': 'text/x-java',
         'name': 'java',
@@ -129,6 +133,52 @@ class ProcessingKernel(MetaKernel):
         """%%processing - run contents of cell as a Processing script"""
         if code.strip() == "":
             return
+
+        # first, we make sure it compiles
+
+        in_directory = tempfile.mkdtemp()
+        out_directory = tempfile.mkdtemp()
+        filename = os.path.basename(in_directory)
+
+        with open(os.path.join(in_directory, filename + ".pde"), "w") as fp:
+            fp.write(code)
+
+        cmd = ["/home/dblank/Desktop/processing-2.2.1/processing-java",
+               "--sketch=%s" % in_directory,
+               "--build", "--force",
+               "--output=%s" % out_directory]
+
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = [str(bin, encoding="utf-8") for bin in p.communicate()]
+        
+        if stderr:
+            # 'Sketch.pde:8:0:8:0: The field Component.y is not visible\n'
+            # sketch name:line start: col start: line end: col end: message
+            # empty if successful
+            try:
+                tempname, line_start, col_start, line_end, col_end, message = stderr.split(":", 5)
+                message = message.strip()
+                code_lines = code.split("\n")
+                line_start = int(line_start)
+                col_start = int(col_start)
+                display_start = max(0, line_start - 3)
+                display_end = min(line_start + 3, len(code_lines))
+                if col_start:
+                    self.Error("           " + (" " * col_start) + "|")
+                    self.Error("           " + (" " * col_start) + "V")
+                self.Error(" Line     +" + ("-" * 75))
+                for line in range(display_start, display_end):
+                    self.Error("%5s: %s | %s" % (line + 1, "->" if (line + 1) == line_start else "  ", code_lines[line]))
+                self.Error("          +" + ("-" * 75))
+                self.Error("")
+                self.Error("Compile error in line %d: %s" % (line_start, message))
+            except:
+                self.Error(stderr)
+            return
+        # else:
+        # stdout
+        # 'Finished.\n', if successful; '' otherwise
+
         self.canvas_id += 1
         repr_code = repr(code)
         if repr_code.startswith('u'):
@@ -365,9 +415,12 @@ require([window.location.protocol + "//calysto.github.io/javascripts/processing/
             try:
                 import html2text
                 import urllib
+                try:
+                    html = str(urllib.request.urlopen(url).read(), encoding="utf-8")
+                except:
+                    html = str(urllib.urlopen(url).read())
             except:
                 return url
-            html = urllib.urlopen(url).read()
             visible_text = html2text.html2text(html)
             pattern = re.compile("(.*?)### ", re.DOTALL)
             visible_text = re.sub(pattern, "### ", visible_text, 1)
