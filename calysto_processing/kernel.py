@@ -138,9 +138,9 @@ class ProcessingKernel(MetaKernel):
 
         in_directory = tempfile.mkdtemp()
         out_directory = tempfile.mkdtemp()
-        filename = os.path.basename(in_directory)
+        filename = os.path.basename(in_directory) + ".pde"
 
-        with open(os.path.join(in_directory, filename + ".pde"), "w") as fp:
+        with open(os.path.join(in_directory, filename), "w") as fp:
             fp.write(code)
 
         cmd = ["/home/dblank/Desktop/processing-2.2.1/processing-java",
@@ -150,30 +150,62 @@ class ProcessingKernel(MetaKernel):
 
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = [str(bin, encoding="utf-8") for bin in p.communicate()]
-        
+
         if stderr:
-            # 'Sketch.pde:8:0:8:0: The field Component.y is not visible\n'
+            # 'other messages here...\nSketch.pde:8:0:8:0: The field Component.y is not visible\n'
             # sketch name:line start: col start: line end: col end: message
             # empty if successful
-            try:
-                tempname, line_start, col_start, line_end, col_end, message = stderr.split(":", 5)
-                message = message.strip()
-                code_lines = code.split("\n")
-                line_start = int(line_start)
-                col_start = int(col_start)
-                display_start = max(0, line_start - 3)
-                display_end = min(line_start + 3, len(code_lines))
-                if col_start:
-                    self.Error("           " + (" " * col_start) + "|")
-                    self.Error("           " + (" " * col_start) + "V")
-                self.Error(" Line     +" + ("-" * 75))
-                for line in range(display_start, display_end):
-                    self.Error("%5s: %s | %s" % (line + 1, "->" if (line + 1) == line_start else "  ", code_lines[line]))
-                self.Error("          +" + ("-" * 75))
-                self.Error("")
-                self.Error("Compile error in line %d: %s" % (line_start, message))
-            except:
-                self.Error(stderr)
+            for line in stderr.split("\n"):
+                if line.strip() == "":
+                    continue
+                if line.startswith(filename):
+                    tempname, line_start, col_start, line_end, col_end, message = line.split(":", 5)
+                    message = message.strip()
+                    code_lines = code.split("\n")
+                    line_start = int(line_start)
+                    line_end = int(line_end)
+                    col_start = int(col_start)
+                    col_end = int(col_end)
+                    if line_end == line_start and col_start == col_end:
+                        if col_start == 0:
+                            line_end = line_start + 1
+                        else:
+                            col_end = col_start + 1
+                    display_start = max(0, line_start - 3)
+                    display_end = min(line_start + 3, len(code_lines))
+                    if col_start:
+                        self.Error("           " + (" " * col_start) + "|")
+                        self.Error("           " + (" " * col_start) + "V")
+                    self.Error(" Line     +" + ("-" * 75))
+                    for line in range(display_start, display_end):
+                        self.Error("%5s: %s | %s" % (line + 1, "->" if (line + 1) == line_start else "  ", code_lines[line]))
+                    self.Error("          +" + ("-" * 75))
+                    self.Error("")
+                    self.Error("Compile error in line %d: %s" % (line_start, message))
+                    ##self.Print("Highlighted: %s %s %s %s" % (line_start, col_start, line_end, col_end))
+                    ## TODO: get_selected_cell() appears to be wrong cell at this point....
+                    '''self.Display(HTML("""
+<style type="text/css">
+      .breakpoints {width: 1.5em;}
+      .styled-background { background-color: #ff7; }
+</style>
+
+<script>
+function highlight(cell, line1, col1, line2, col2) {
+    if (typeof mt !== 'undefined') {
+        mt.clear();
+    }
+    if (cell) {
+        mt = cell.code_mirror.markText({line: line1, ch: col1},
+                                       {line: line2, ch: col2},
+                                       {className: "styled-background"});
+    }
+}
+</script>
+"""))'''
+                    ##self.Display(Javascript("highlight(IPython.notebook.get_selected_cell(), %s, %s, %s, %s);" % (line_start, col_start, line_end, col_end)))
+                else:
+                    self.Error(line)
             return
         # else:
         # stdout
@@ -192,11 +224,11 @@ class ProcessingKernel(MetaKernel):
 </div>
 <div id="controls_div_%(id)s">
   <button id="run_button_%(id)s" onclick="startSketch('%(id)s');">
-    <i class="fa fa-play-circle-o" style="size: 2em;"></i> 
+    <i class="fa fa-play-circle-o" style="size: 2em;"></i>
         Run
   </button>
   <button id="pause_button_%(id)s" onclick="pauseSketch('%(id)s');">
-    <i class="fa fa-pause" style="size: 2em;"></i> 
+    <i class="fa fa-pause" style="size: 2em;"></i>
         Pause
   </button>
   <button id="setup_button_%(id)s" onclick="setupSketch('%(id)s');">
@@ -217,7 +249,7 @@ function change_button(button, disable) {
         button.style.color = "black";
     }
 }
-      
+
 function startSketch(id) {
     switchSketchState(id, true);
 }
@@ -232,7 +264,7 @@ function drawSketch(id) {
         if (processingInstance.draw != undefined) {
             document.getElementById("state_" + id).innerHTML = "Drawing...";
             try {
-                processingInstance.redraw();  
+                processingInstance.redraw();
                 document.getElementById("state_" + id).innerHTML = "Drawing... done! Paused.";
                 document.getElementById("state_" + id).style.color = "blue";
             } catch (e) {
@@ -260,7 +292,7 @@ function setupSketch(id) {
         if (processingInstance.setup != undefined) {
             document.getElementById("state_" + id).innerHTML = "Setting up...";
             try {
-                processingInstance.setup();  
+                processingInstance.setup();
                 document.getElementById("state_" + id).innerHTML = "Setting up... done! Paused.";
                 document.getElementById("state_" + id).style.color = "blue";
             } catch (e) {
@@ -334,12 +366,12 @@ require([window.location.protocol + "//calysto.github.io/javascripts/processing/
             // Canvas:
             if (processingInstance.externals.context === undefined) {
                 document.getElementById("canvas_div_%(id)s").style.display = "none";
-            } 
+            }
         }, 100);
         // Controls:
         if (!(processingInstance.isRunning() && processingInstance.draw != undefined)) {
             document.getElementById("controls_div_%(id)s").style.display = "none";
-        } 
+        }
         if (processingInstance.draw != undefined) {
             if (!has_error) {
                 document.getElementById("state_%(id)s").innerHTML = "Running...";
