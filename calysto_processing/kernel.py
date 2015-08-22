@@ -143,7 +143,8 @@ class ProcessingKernel(MetaKernel):
         with open(os.path.join(in_directory, filename), "w") as fp:
             fp.write(code)
 
-        cmd = ["/home/dblank/Desktop/processing-2.2.1/processing-java",
+        processing_java = os.environ.get("PROCESSING_JAVA", "processing-java")
+        cmd = [processing_java,
                "--sketch=%s" % in_directory,
                "--build", "--force",
                "--output=%s" % out_directory]
@@ -170,15 +171,15 @@ class ProcessingKernel(MetaKernel):
                     display_start = max(0, line_start - 3)
                     display_end = min(line_start + 3, len(code_lines))
                     if col_start:
-                        self.Error("           " + (" " * col_start) + "|")
-                        self.Error("           " + (" " * col_start) + "V")
+                        self.Error("           " + (" " * (col_start - 1)) + "|")
+                        self.Error("           " + (" " * (col_start - 1)) + "V")
                     self.Error(" Line     +" + ("-" * 75))
                     for line in range(display_start, display_end):
                         self.Error("%5s: %s | %s" % (line + 1, "->" if (line + 1) == line_start else "  ", code_lines[line]))
                     self.Error("          +" + ("-" * 75))
                     self.Error("")
                     self.Error("Compile error in line %d: %s" % (line_start, message))
-                    self.Print("Highlighted: %s %s %s %s" % (line_start - 2, 0, line_end - 2, 0))
+                    #self.Print("Highlighted: %s %s %s %s" % (line_start - 2, 0, line_end - 2, 0))
                     self.Display(HTML("""
 <style type="text/css">
       .styled-background { background-color: #ff7; }

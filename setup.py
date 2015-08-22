@@ -6,12 +6,13 @@ import json
 import sys
 
 kernel_json = {
-    "argv": [sys.executable, 
-	     "-m", "calysto_processing", 
+    "argv": [sys.executable,
+	     "-m", "calysto_processing",
 	     "-f", "{connection_file}"],
     "display_name": "Calysto Processing",
     "language": "java",
-    "name": "calysto_processing"
+    "name": "calysto_processing",
+    "env": {"PROCESSING_JAVA": "processing-java"}
 }
 
 class install_with_kernelspec(install):
@@ -27,10 +28,10 @@ class install_with_kernelspec(install):
             install_kernel_resources(td, resource="calysto_processing")
             log.info('Installing kernel spec')
             try:
-                install_kernel_spec(td, 'calysto_processing', user=self.user, 
+                install_kernel_spec(td, 'calysto_processing', user=self.user,
                                     replace=True)
             except:
-                install_kernel_spec(td, 'calysto_processing', user=not self.user, 
+                install_kernel_spec(td, 'calysto_processing', user=not self.user,
                                     replace=True)
 
 svem_flag = '--single-version-externally-managed'
