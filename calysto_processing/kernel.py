@@ -165,12 +165,8 @@ class ProcessingKernel(MetaKernel):
                     line_start = int(line_start)
                     line_end = int(line_end)
                     col_start = int(col_start)
-                    col_end = int(col_end)
-                    if line_end == line_start and col_start == col_end:
-                        if col_start == 0:
-                            line_end = line_start + 1
-                        else:
-                            col_end = col_start + 1
+                    if line_end == line_start:
+                        line_end = line_start + 1
                     display_start = max(0, line_start - 3)
                     display_end = min(line_start + 3, len(code_lines))
                     if col_start:
@@ -182,28 +178,25 @@ class ProcessingKernel(MetaKernel):
                     self.Error("          +" + ("-" * 75))
                     self.Error("")
                     self.Error("Compile error in line %d: %s" % (line_start, message))
-                    ##self.Print("Highlighted: %s %s %s %s" % (line_start, col_start, line_end, col_end))
-                    ## TODO: get_selected_cell() appears to be wrong cell at this point....
-                    '''self.Display(HTML("""
+                    self.Print("Highlighted: %s %s %s %s" % (line_start - 2, 0, line_end - 2, 0))
+                    self.Display(HTML("""
 <style type="text/css">
-      .breakpoints {width: 1.5em;}
       .styled-background { background-color: #ff7; }
 </style>
 
 <script>
-function highlight(cell, line1, col1, line2, col2) {
-    if (typeof mt !== 'undefined') {
-        mt.clear();
-    }
-    if (cell) {
-        mt = cell.code_mirror.markText({line: line1, ch: col1},
-                                       {line: line2, ch: col2},
-                                       {className: "styled-background"});
-    }
+if (typeof markedText !== 'undefined') {
+        markedText.clear();
 }
+IPython.notebook.select_prev()
+var cell = IPython.notebook.get_selected_cell();
+markedText = cell.code_mirror.markText({line: %s, col: %s},
+                                       {line: %s, col: %s},
+                                       {className: "styled-background"});
+cell.show_line_numbers(1)
+IPython.notebook.select_next()
 </script>
-"""))'''
-                    ##self.Display(Javascript("highlight(IPython.notebook.get_selected_cell(), %s, %s, %s, %s);" % (line_start, col_start, line_end, col_end)))
+                    """ % (line_start - 2, 0, line_end - 2, 0)))
                 else:
                     self.Error(line)
             return
