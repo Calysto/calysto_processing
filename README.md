@@ -19,6 +19,10 @@ or in the system kernels with:
 sudo pip install --upgrade calysto-processing
 ```
 
+Next, install Processing 2 from https://processing.org/download/
+
+Edit the install calysto_processing/kernel.js to point `processing_java`. 
+
 Use it in the notebook with:
 
 ```
