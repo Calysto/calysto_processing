@@ -1,0 +1,6 @@
+include setup.py
+include calysto_processing/__init__.py
+include calysto_processing/__main__.py
+include calysto_processing/kernel.py
+include README.md
+include calysto_processing/images/*.png
