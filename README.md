@@ -34,7 +34,7 @@ and then select `Calysto Processing` for a new notebook.
 Calysto Processing also has an enhancement: Tables, and some related functions:
 
 ```java
-import processing.table.*;
+/* @pjs includeTable="true"; */
 
 Table table;
 
