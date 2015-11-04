@@ -66,6 +66,8 @@ Table-related classes and methods:
 
 See source for more details.
 
+Example notebooks can be found in https://github.com/Calysto/calysto_processing/tree/master/notebooks
+
 Requires:
 
 * ipython-3.0
