@@ -46,7 +46,7 @@ void setup() {
 long findMax() {
     int retval = 0;
     for (TableRow row : table.rows()) {
-        pop = row.getInt("Population");
+        int pop = row.getInt("Population");
         if (pop > retval)
             retval = pop;
     }
