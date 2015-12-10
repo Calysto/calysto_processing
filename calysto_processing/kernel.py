@@ -233,6 +233,7 @@ IPython.notebook.select_next()
   </button>
 </div>
 <b>Sketch #%(id)s state:</b> <span id="state_%(id)s">Loading...</span><br/>
+<div id="output_%(id)s"></div>
 <script>
 
 function change_button(button, disable) {
@@ -356,6 +357,14 @@ require([window.location.protocol + "//calysto.github.io/javascripts/processing/
         }
     }
     if (processingInstance != undefined) {
+        processingInstance.println = function (message) {
+            var output = document.getElementById("output_%(id)s");
+            output.innerText += message + "\\n";
+        };
+        processingInstance.print = function (message) {
+            var output = document.getElementById("output_%(id)s");
+            output.innerText += message;
+        };
         setTimeout(function () {
             // Canvas:
             if (processingInstance.externals.context === undefined) {
