@@ -21,7 +21,22 @@ sudo pip install --upgrade calysto-processing
 
 Next, install Processing 2 from https://processing.org/download/
 
-Edit the install calysto_processing/kernel.js to point `processing_java`. 
+You will need to make sure that you have installed and access to the `processing_java` command. Mac users will need to install it from Processing by selecting 'Install "processing_java"' under the Tools menu.
+
+Finally, edit the installed `calysto_processing/kernel.js` to include the full path to the `processing_java` command. That might look like:
+
+```javascript
+{
+ "argv": 
+    ["/usr/bin/python3", 
+     "-m", "calysto_processing", 
+     "-f", "{connection_file}"], 
+ "display_name": "Calysto Processing", 
+ "env": {"PROCESSING_JAVA": "/home/dblank/Desktop/processing-2.2.1/processing-java"}, 
+ "language": "java", 
+ "name": "calysto_processing"
+}
+```
 
 Use it in the notebook with:
 
@@ -34,7 +49,7 @@ and then select `Calysto Processing` for a new notebook.
 Calysto Processing also has an enhancement: Tables, and some related functions:
 
 ```java
-import processing.table.*;
+/* @pjs includeTable="true"; */
 
 Table table;
 
@@ -46,7 +61,7 @@ void setup() {
 long findMax() {
     int retval = 0;
     for (TableRow row : table.rows()) {
-        pop = row.getInt("Population");
+        int pop = row.getInt("Population");
         if (pop > retval)
             retval = pop;
     }
@@ -65,6 +80,8 @@ Table-related classes and methods:
 * row.getFloat(COLUMN_NAME)
 
 See source for more details.
+
+Example notebooks can be found in https://github.com/Calysto/calysto_processing/tree/master/notebooks
 
 Requires:
 
