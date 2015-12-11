@@ -335,6 +335,22 @@ require([window.location.protocol + "//calysto.github.io/javascripts/processing/
     var cc;
     var processingInstance;
     var has_error = false;
+    // Temp, just for the code that runs immediately:
+    Processing.logger.println = function (message) {
+        //IPython.notebook.get_selected_cell()
+        var output = document.getElementById("output_%(id)s");
+        if (output.innerText.match(/\\n/g) != null && output.innerText.match(/\\n/g).length > 50) {
+            output.innerText = "";
+        }
+        output.innerText += message + "\\n";
+    };
+    Processing.logger.print = function (message) {
+        var output = document.getElementById("output_%(id)s");
+        if (output.innerText.match(/\\n/g) != null && output.innerText.match(/\\n/g).length > 50) {
+            output.innerText = "";
+        }
+        output.innerText += message;
+    };
     try {
         cc = Processing.compile(processingCode);
     } catch (e) {
@@ -359,10 +375,16 @@ require([window.location.protocol + "//calysto.github.io/javascripts/processing/
     if (processingInstance != undefined) {
         processingInstance.println = function (message) {
             var output = document.getElementById("output_%(id)s");
+            if (output.innerText.match(/\\n/g) != null && output.innerText.match(/\\n/g).length > 50) {
+                output.innerText = "";
+            }
             output.innerText += message + "\\n";
         };
         processingInstance.print = function (message) {
             var output = document.getElementById("output_%(id)s");
+            if (output.innerText.match(/\\n/g) != null && output.innerText.match(/\\n/g).length > 50) {
+                output.innerText = "";
+            }
             output.innerText += message;
         };
         setTimeout(function () {
