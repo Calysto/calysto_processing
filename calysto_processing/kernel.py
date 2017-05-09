@@ -3,6 +3,7 @@ from IPython.display import HTML, Javascript
 
 import re
 import os
+import sys
 import subprocess
 import tempfile
 
@@ -21,6 +22,15 @@ class ProcessingKernel(MetaKernel):
         # 'pygments_lexer': 'language',
         # 'version'       : "x.y.z",
         'file_extension': '.java',
+    }
+    kernel_json = {
+        "argv": [sys.executable,
+                 "-m", "calysto_processing",
+                 "-f", "{connection_file}"],
+        "display_name": "Calysto Processing",
+        "language": "java",
+        "codemirror_mode": "java",
+        "name": "calysto_processing",
     }
     banner = "Processing kernel - evaluates Processing programs"
     canvas_id = 0
@@ -148,8 +158,11 @@ class ProcessingKernel(MetaKernel):
                "--sketch=%s" % in_directory,
                "--build", "--force",
                "--output=%s" % out_directory]
-
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except:
+            self.Error("Unable to run command:", cmd)
+            return
         stdout, stderr = [str(bin, encoding="utf-8") for bin in p.communicate()]
 
         if stderr:

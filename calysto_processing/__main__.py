@@ -1,3 +1,4 @@
-from IPython.kernel.zmq.kernelapp import IPKernelApp 
-from .kernel import ProcessingKernel
-IPKernelApp.launch_instance(kernel_class=ProcessingKernel) 
+from calysto_processing.kernel import ProcessingKernel
+
+if __name__ == "__main__":
+    ProcessingKernel.run_as_main()
