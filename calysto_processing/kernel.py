@@ -233,7 +233,6 @@ IPython.notebook.select_next()
   </button>
 </div>
 <b>Sketch #%(id)s state:</b> <span id="state_%(id)s">Loading...</span><br/>
-<div id="output_%(id)s"></div>
 <script>
 
 function change_button(button, disable) {
@@ -335,22 +334,7 @@ require([window.location.protocol + "//calysto.github.io/javascripts/processing/
     var cc;
     var processingInstance;
     var has_error = false;
-    // Temp, just for the code that runs immediately:
-    Processing.logger.println = function (message) {
-        //IPython.notebook.get_selected_cell()
-        var output = document.getElementById("output_%(id)s");
-        if (output.innerText.match(/\\n/g) != null && output.innerText.match(/\\n/g).length > 50) {
-            output.innerText = "";
-        }
-        output.innerText += message + "\\n";
-    };
-    Processing.logger.print = function (message) {
-        var output = document.getElementById("output_%(id)s");
-        if (output.innerText.match(/\\n/g) != null && output.innerText.match(/\\n/g).length > 50) {
-            output.innerText = "";
-        }
-        output.innerText += message;
-    };
+
     try {
         cc = Processing.compile(processingCode);
     } catch (e) {
@@ -363,30 +347,18 @@ require([window.location.protocol + "//calysto.github.io/javascripts/processing/
     if (cc != undefined) {
         try {
             processingInstance = new Processing("canvas_%(id)s", cc);
+            processingInstance.println = window.jyp_println
         } catch (e) {
             console.log(e);
             cc = Processing.compile("println('" + e.toString() + "');");
             document.getElementById("state_%(id)s").innerHTML = e.toString();
             document.getElementById("state_%(id)s").style.color = "red";
             processingInstance = new Processing("canvas_%(id)s", cc);
+            processingInstance.println = window.jyp_println
             has_error = true;
         }
     }
     if (processingInstance != undefined) {
-        processingInstance.println = function (message) {
-            var output = document.getElementById("output_%(id)s");
-            if (output.innerText.match(/\\n/g) != null && output.innerText.match(/\\n/g).length > 50) {
-                output.innerText = "";
-            }
-            output.innerText += message + "\\n";
-        };
-        processingInstance.print = function (message) {
-            var output = document.getElementById("output_%(id)s");
-            if (output.innerText.match(/\\n/g) != null && output.innerText.match(/\\n/g).length > 50) {
-                output.innerText = "";
-            }
-            output.innerText += message;
-        };
         setTimeout(function () {
             // Canvas:
             if (processingInstance.externals.context === undefined) {
@@ -448,6 +420,32 @@ require([window.location.protocol + "//calysto.github.io/javascripts/processing/
             if (processingInstance != undefined && processingInstance.isRunning())
                 processingInstance.noLoop();
         });
+
+
+        var output_area = this;
+        // find my cell element
+        var cell_element = output_area.element.parents('.cell');
+        // which cell is it?
+        var cell_idx = Jupyter.notebook.get_cell_elements().index(cell_element);
+        // get the cell object
+        var cell = Jupyter.notebook.get_cell(cell_idx);
+
+        function jyp_print(cell, newline) {
+            return function(message) {
+                cell.get_callbacks().iopub.output({header: {"msg_type": "stream"},
+                                                   content: {text: message + newline,
+                                                             name: "stdout"}});
+            }
+        }
+        window.jyp_println = jyp_print(cell, "\\n");
+        window.jyp_print = jyp_print(cell, "");
+
+        require([window.location.protocol + "//calysto.github.io/javascripts/processing/processing.js"], function() {
+           Processing.logger.println = jyp_print(cell, "\\n");
+           Processing.logger.print = jyp_print(cell, "");
+        });
+
+
         """ % env)
         self.Display(js)
         html = HTML(code)
