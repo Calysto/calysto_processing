@@ -10,41 +10,34 @@ Calysto Processing in use:
 You can install Calysto Processing with:
 
 ```
-pip install --upgrade calysto-processing
+pip3 install --upgrade calysto_processing --user
+python3 -m calysto_processing install --user
 ```
 
 or in the system kernels with:
 
 ```
-sudo pip install --upgrade calysto-processing
+sudo pip3 install --upgrade calysto_processing
+python3 -m calysto_processing install --user
 ```
 
-Next, install Processing 2 from https://processing.org/download/
+Next, install Processing 2 or 3 from https://processing.org/download/
 
 You will need to make sure that you have installed and access to the `processing_java` command. Mac users will need to install it from Processing by selecting 'Install "processing_java"' under the Tools menu.
 
-Finally, edit the installed `calysto_processing/kernel.js` to include the full path to the `processing_java` command. That might look like:
-
-```javascript
-{
- "argv": 
-    ["/usr/bin/python3", 
-     "-m", "calysto_processing", 
-     "-f", "{connection_file}"], 
- "display_name": "Calysto Processing", 
- "env": {"PROCESSING_JAVA": "/home/dblank/Desktop/processing-2.2.1/processing-java"}, 
- "language": "java", 
- "name": "calysto_processing"
-}
-```
-
-Use it in the notebook with:
+Finally, you need to set an environment variable with the location of processing-java, if it is not in your path. For example:
 
 ```
-ipython notebook
+export PROCESSING_JAVA=/opt/processing-3.3.3/processing-java
 ```
 
-and then select `Calysto Processing` for a new notebook.
+Then, you can use it in the notebook with:
+
+```
+jupyter notebook
+```
+
+and then select `Calysto Processing` for a new notebook kernel.
 
 Calysto Processing also has an enhancement: Tables, and some related functions:
 
@@ -85,8 +78,8 @@ Example notebooks can be found in https://github.com/Calysto/calysto_processing/
 
 Requires:
 
-* ipython-3.0
-* Python2 or Python3
+* Jupyter
+* Python3
 * metakernel (installed with pip)
 * calysto (installed with pip)
 
